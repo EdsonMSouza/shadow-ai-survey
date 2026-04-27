@@ -952,18 +952,19 @@ async function submitSurvey(){
   var msg = document.getElementById('submit-msg');
   msg.className = 'submit-msg';
   msg.style.display = 'none';
-  var url = SHEETS_URL;
-  if(!url){
-    msg.className = 'submit-msg submit-err';
-    msg.style.display = 'block';
-    msg.textContent = 'URL do Web App não configurada. O pesquisador responsável deve configurar a integração com o Google Sheets antes de coletar respostas.';
-    return;
-  }
   btn.disabled = true;
   btn.textContent = 'Enviando...';
   var data = collectData();
+  var body = Object.keys(data).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+  }).join('&');
   try {
-    await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: body
+    });
     msg.className = 'submit-msg submit-ok';
     msg.style.display = 'block';
     msg.textContent = 'Respostas registradas com sucesso. Agradecemos sua participação nesta pesquisa.';
@@ -978,7 +979,6 @@ async function submitSurvey(){
     btn.textContent = 'Enviar respostas';
   }
 }
-
 function saveUrl(){
   var url = document.getElementById('sheets-url').value.trim();
   SHEETS_URL = url;
