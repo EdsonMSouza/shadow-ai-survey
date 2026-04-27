@@ -88,13 +88,7 @@ textarea:focus{outline:none;border-color:var(--accent)}
 .submit-msg{padding:1.1rem 1.25rem;border-radius:var(--radius);margin-top:1.25rem;font-size:14px;line-height:1.6;display:none}
 .submit-ok{background:var(--success-bg);color:var(--success);display:block}
 .submit-err{background:var(--error-bg);color:var(--error);display:block}
-.profile-h{font-size:15px;font-weight:600;color:var(--text);margin:1.25rem 0 .5rem}
-.profile-p{font-size:14px;color:var(--text);line-height:1.75;margin-bottom:.85rem}
-.profile-loading{display:flex;gap:6px;justify-content:center;padding:1.5rem 0}
-.profile-loading span{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pdot 1s infinite}
-.profile-loading span:nth-child(2){animation-delay:.2s}
-.profile-loading span:nth-child(3){animation-delay:.4s}
-@keyframes pdot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
 .tcle-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13px;color:var(--text2);line-height:1.7}
 .ended{text-align:center;padding:2.5rem 1rem;color:var(--text2);font-size:15px;line-height:1.7}
 @media(max-width:540px){
@@ -105,6 +99,22 @@ textarea:focus{outline:none;border-color:var(--accent)}
 </head>
 <body>
 <div class="page-wrap">
+
+  <div class="config-card" id="config-card">
+    <div class="config-title">&#9881; Configuração da integração — Google Sheets</div>
+    <p style="font-size:12px;color:var(--warn);margin-bottom:.85rem;line-height:1.5">Cole abaixo a URL do Web App publicado no Google Apps Script. Após inserir e salvar, este painel não ficará visível aos respondentes — remova-o ou oculte-o antes de distribuir o link.</p>
+    <div class="config-row">
+      <input class="config-input" type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/AKfy.../exec" />
+      <span class="status-badge s-warn" id="url-status">Não configurada</span>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:.65rem">A URL é salva localmente no navegador (localStorage). Respondentes que acessarem via link não verão esta configuração — ela deve ser feita pelo pesquisador no dispositivo que hospeda ou no arquivo antes do upload.</p>
+    <div style="margin-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="saveUrl()">Salvar URL</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="testUrl()">Testar conexão</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem;color:var(--error)" onclick="hideConfig()">Ocultar painel (modo respondente)</button>
+    </div>
+  </div>
+
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
     <div class="progress-label" id="prog-label">Seção 1 de 9</div>
@@ -809,13 +819,6 @@ textarea:focus{outline:none;border-color:var(--accent)}
       </div>
       <div id="submit-msg" class="submit-msg"></div>
     </div>
-
-    <div id="profile-container" style="display:none;margin-top:1rem">
-      <div class="card">
-        <div class="block-tag">Perfil do respondente — gerado por IA</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6">Com base nas suas respostas, o sistema gerou uma análise individualizada estruturada em quatro dimensões. Esta análise foi produzida automaticamente e destina-se exclusivamente a fins reflexivos e informativos.</p>
-        <div id="profile-content"></div>
-      </div>
     </div>
   </div>
 
@@ -825,13 +828,6 @@ textarea:focus{outline:none;border-color:var(--accent)}
 var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwasKwaUuuGkC2wLbvolaHgOJ6lfD9-iF5cam5KndZ0knjYhNEsfn52TvWes1YrwmjzxA/exec';
 var cur = 0;
 var TOTAL = 9;
-
-(function(){
-  try {
-    var saved = localStorage.getItem('shadow_ai_sheets_url');
-    if(saved){ SHEETS_URL = saved; document.getElementById('sheets-url').value = saved; updateUrlStatus(); }
-  } catch(e){}
-})();
 
 function updateProgress(){
   var pct = Math.round((cur / TOTAL) * 100);
@@ -1011,135 +1007,9 @@ function submitSurvey(){
     btn.style.display = 'none';
     document.getElementById('prog').style.width = '100%';
     document.getElementById('prog-label').textContent = 'Concluído';
-    generateProfile(data);
   };
 
   form.submit();
-}
-
-function buildPrompt(d){
-  var flags = d.flags ? d.flags.split(' | ').filter(function(f){ return f; }) : [];
-  var flagDesc = {
-    'IC-01':'Inconsistência de política: declarou seguir rigorosamente diretrizes de uma política que afirmou não existir ou desconhecer.',
-    'BC-01':'Overclaiming: marcou ferramentas de IAG fictícias como utilizadas.',
-    'AT-01':'Falha no item de atenção: não seguiu a instrução explícita da questão 3.3.',
-    'IR-01':'Contradição ética: concordou simultaneamente que declarar IAG é obrigação ética e que o não-disclosure não compromete a integridade.',
-    'IR-02':'Subrelato retrospectivo: declarou uso frequente/regular de IAG, mas negou uso nos três artigos mais recentes.',
-    'IR-03':'Inconsistência de declaração: afirmou sempre declarar o uso de IAG e admitiu ter publicado sem declarar.',
-    'PS-01':'Projeção social: estimou que mais de 50% dos colegas utilizam IAG sem declarar, mas afirmou nunca ter feito o mesmo.',
-    'CF-01':'Comportamento condicionado: indicou que sua conduta mudaria se o uso de IAG fosse indetectável.',
-    'DS-SUM':'Escore de desejabilidade social elevado: concordância máxima nos três itens de autorepresentação virtuosa.',
-    'IR-05':'Incoerência de risco: demonstrou receio de auditoria sem admitir uso irregular nos blocos anteriores.'
-  };
-  var flagLines = flags.length > 0
-    ? flags.map(function(f){ return '- ' + f + ': ' + (flagDesc[f]||f); }).join('\n')
-    : 'Nenhum código de inconsistência ativado.';
-
-  return [
-    'Você é um analista especializado em integridade científica e uso de inteligência artificial generativa (IAG) na pesquisa acadêmica.',
-    'A seguir estão as respostas de um pesquisador a um survey sobre Shadow AI na prática científica.',
-    'Elabore um perfil acadêmico e analítico estruturado em quatro dimensões, com linguagem formal em português brasileiro.',
-    'Não use travessões. Use vírgulas ou parênteses para informações secundárias.',
-    '',
-    '=== DADOS DO RESPONDENTE ===',
-    'Área CNPq/CAPES: ' + d.q11,
-    'Tempo de atuação em PPG: ' + d.q12,
-    'Níveis de orientação: ' + d.q13,
-    'Artigos publicados (últimos 3 anos): ' + d.q14,
-    'Titulação: ' + d.q15,
-    'Região: ' + d.q17,
-    '',
-    '=== PERFIL DE USO DE IAG ===',
-    'Frequência de uso: ' + d.q51,
-    'Finalidades de uso: ' + d.q52,
-    'Uso nos 3 artigos mais recentes: ' + d.q53,
-    'Ferramentas utilizadas: ' + d.q32,
-    'Conhecimento do conceito Shadow AI: ' + d.q31,
-    'Já utilizou detecção de IAG em próprios textos: ' + d.q73,
-    'IAG melhorou produtividade: ' + d.q62,
-    '',
-    '=== PERFIL ÉTICO ===',
-    'Aceitabilidade do uso para escrita (desde que declarado): ' + d.q41 + '/5',
-    'Aceitabilidade do uso para análise de dados (desde que declarado): ' + d.q42 + '/5',
-    'Declaração como obrigação ética: ' + d.q43 + '/5',
-    'Non-disclosure aceitável se resultados corretos: ' + d.q44 + '/5',
-    'Avaliação Vinheta A (revisão linguística não declarada): ' + d.q45 + '/5',
-    'Avaliação Vinheta B (hipóteses geradas por IAG não declaradas): ' + d.q46 + '/5',
-    'Tentação de uso não declarado (item reverso): ' + d.q47 + '/5',
-    'Publish or perish justifica não-declaração: ' + d.q48 + '/5',
-    'Sempre declara o uso de IAG: ' + d.q54 + '/5',
-    'Já publicou sem declarar: ' + d.q55,
-    'Formato de declaração utilizado: ' + d.q56,
-    'Principal motivador da declaração (penalidades vs. ética): ' + d.q63,
-    'Razão para declarar (detecção vs. convicção): ' + d.q75,
-    '',
-    '=== COMPORTAMENTO CONTRAFACTUAL E PROJEÇÃO SOCIAL ===',
-    'Comportamento se uso fosse indetectável: ' + d.q59,
-    'Percentual estimado de colegas que usam IAG sem declarar: ' + d.q57,
-    'Percentual próprio de artigos com IAG não declarada: ' + d.q58,
-    'Receio de auditoria institucional: ' + d.q76 + '/5',
-    '',
-    '=== CONTEXTO INSTITUCIONAL ===',
-    'Política institucional sobre IAG: ' + d.q21,
-    'Segue orientações institucionais: ' + d.q23,
-    'Conhece diretrizes dos periódicos: ' + d.q22,
-    'Já recebeu questionamento editorial sobre IAG: ' + d.q25,
-    '',
-    '=== CÓDIGOS DE CONSISTÊNCIA INTERNA ===',
-    'Flags ativados (' + flags.length + '):',
-    flagLines,
-    '',
-    '=== INSTRUÇÕES PARA O PERFIL ===',
-    'Estruture o perfil nas seguintes quatro seções, nesta ordem:',
-    '',
-    '1. PERFIL DE USO DE IAG',
-    'Caracterize os padrões de adoção: frequência, finalidades predominantes, ferramentas utilizadas e relação entre uso declarado em geral e uso efetivo nos artigos recentes. Aponte se há indícios de adoção instrumental ou estratégica da IAG.',
-    '',
-    '2. PERFIL ÉTICO',
-    'Analise o posicionamento sobre disclosure e integridade científica com base nas escalas Likert, nas vinhetas e nas questões comportamentais. Identifique se o posicionamento é consistente, progressivo ou ambíguo.',
-    '',
-    '3. PERFIL DE RISCO E CONSISTÊNCIA INTERNA',
-    'Interprete as inconsistências identificadas (se houver), discutindo o que cada padrão sugere sobre a confiabilidade das respostas. Se nenhuma inconsistência foi identificada, destaque isso como indicativo de consistência interna. Classifique o nível de confiabilidade geral (0 inconsistências = confiável; 1 = aceitável; 2 = outlier; 3 ou mais = exclusão recomendada).',
-    '',
-    '4. COMPARAÇÃO COM O COMPORTAMENTO ESTIMADO DOS PARES',
-    'Contraste a estimativa do respondente sobre o comportamento dos colegas com seu próprio comportamento declarado. Analise se há padrão de projeção social e o que isso indica metodologicamente.',
-    '',
-    'Finalize com um parágrafo sintético intitulado SÍNTESE DO PERFIL, de no máximo 5 linhas, que caracterize o respondente de forma objetiva e acadêmica.',
-    'Não mencione os códigos internos de validação ao respondente. Refira-se a eles apenas como inconsistências identificadas ou padrões de resposta que merecem cautela interpretativa.',
-    'Tom: acadêmico, analítico, neutro. Extensão total: entre 400 e 600 palavras.'
-  ].join('\n');
-}
-
-async function generateProfile(data){
-  var container = document.getElementById('profile-container');
-  var content = document.getElementById('profile-content');
-  if(!container || !content) return;
-  container.style.display = 'block';
-  content.innerHTML = '<div class="profile-loading"><span></span><span></span><span></span></div><p style="font-size:13px;color:var(--text2);margin-top:.75rem">Analisando respostas...</p>';
-  try {
-    var prompt = buildPrompt(data);
-    var body = 'action=profile&prompt=' + encodeURIComponent(prompt);
-    var response = await fetch(SHEETS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body
-    });
-    var result = await response.json();
-    if(result.status === 'ok' && result.text){
-      var text = result.text;
-      var html = text
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-        .replace(/^#{1,3}\s+(.+)$/gm,'<h3 class="profile-h">$1</h3>')
-        .replace(/\n{2,}/g,'</p><p class="profile-p">')
-        .replace(/\n/g,'<br>');
-      content.innerHTML = '<p class="profile-p">' + html + '</p>';
-    } else {
-      content.innerHTML = '<p style="color:var(--error);font-size:13px">Não foi possível gerar o perfil. Tente novamente em instantes.</p>';
-    }
-  } catch(err) {
-    content.innerHTML = '<p style="color:var(--error);font-size:13px">Erro ao gerar o perfil. Verifique a configuração do Apps Script.</p>';
-  }
 }
 
 updateProgress();
