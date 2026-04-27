@@ -98,22 +98,6 @@ textarea:focus{outline:none;border-color:var(--accent)}
 </head>
 <body>
 <div class="page-wrap">
-
-  <div class="config-card" id="config-card">
-    <div class="config-title">&#9881; Configuração da integração — Google Sheets</div>
-    <p style="font-size:12px;color:var(--warn);margin-bottom:.85rem;line-height:1.5">Cole abaixo a URL do Web App publicado no Google Apps Script. Após inserir e salvar, este painel não ficará visível aos respondentes — remova-o ou oculte-o antes de distribuir o link.</p>
-    <div class="config-row">
-      <input class="config-input" type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/AKfy.../exec" />
-      <span class="status-badge s-warn" id="url-status">Não configurada</span>
-    </div>
-    <p style="font-size:11px;color:var(--text3);margin-top:.65rem">A URL é salva localmente no navegador (localStorage). Respondentes que acessarem via link não verão esta configuração — ela deve ser feita pelo pesquisador no dispositivo que hospeda ou no arquivo antes do upload.</p>
-    <div style="margin-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">
-      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="saveUrl()">Salvar URL</button>
-      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="testUrl()">Testar conexão</button>
-      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem;color:var(--error)" onclick="hideConfig()">Ocultar painel (modo respondente)</button>
-    </div>
-  </div>
-
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
     <div class="progress-label" id="prog-label">Seção 1 de 9</div>
