@@ -99,6 +99,21 @@ textarea:focus{outline:none;border-color:var(--accent)}
 <body>
 <div class="page-wrap">
 
+  <div class="config-card" id="config-card">
+    <div class="config-title">&#9881; Configuração da integração — Google Sheets</div>
+    <p style="font-size:12px;color:var(--warn);margin-bottom:.85rem;line-height:1.5">Cole abaixo a URL do Web App publicado no Google Apps Script. Após inserir e salvar, este painel não ficará visível aos respondentes — remova-o ou oculte-o antes de distribuir o link.</p>
+    <div class="config-row">
+      <input class="config-input" type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/AKfy.../exec" />
+      <span class="status-badge s-warn" id="url-status">Não configurada</span>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:.65rem">A URL é salva localmente no navegador (localStorage). Respondentes que acessarem via link não verão esta configuração — ela deve ser feita pelo pesquisador no dispositivo que hospeda ou no arquivo antes do upload.</p>
+    <div style="margin-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="saveUrl()">Salvar URL</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="testUrl()">Testar conexão</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem;color:var(--error)" onclick="hideConfig()">Ocultar painel (modo respondente)</button>
+    </div>
+  </div>
+
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
     <div class="progress-label" id="prog-label">Seção 1 de 9</div>
@@ -808,7 +823,7 @@ textarea:focus{outline:none;border-color:var(--accent)}
 </div>
 
 <script>
-var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwasKwaUuuGkC2wLbvolaHgOJ6lfD9-iF5cam5KndZ0knjYhNEsfn52TvWes1YrwmjzxA/exec';
+var SHEETS_URL = 'https://script.google.com/macros/library/d/1Ei2cfSdXiX0LTisgK64_uvQZAzJ-z4UnloaOYsktPh7b7iikd6D8TmUg/4';
 var cur = 0;
 var TOTAL = 9;
 
@@ -946,69 +961,62 @@ function collectData(){
   return d;
 }
 
-async function submitSurvey(){
+function submitSurvey(){
   if(!validateSection(8)) return;
   var btn = document.getElementById('submit-btn');
   var msg = document.getElementById('submit-msg');
   msg.className = 'submit-msg';
   msg.style.display = 'none';
+  if(!SHEETS_URL){
+    msg.className = 'submit-msg submit-err';
+    msg.style.display = 'block';
+    msg.textContent = 'URL do Web App não configurada. O pesquisador responsável deve configurar a integração com o Google Sheets antes de coletar respostas.';
+    return;
+  }
   btn.disabled = true;
   btn.textContent = 'Enviando...';
   var data = collectData();
-  var body = Object.keys(data).map(function(k){
-    return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
-  }).join('&');
-  try {
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: body
-    });
+
+  var iframe = document.getElementById('submit-iframe');
+  if(!iframe){
+    iframe = document.createElement('iframe');
+    iframe.id = 'submit-iframe';
+    iframe.name = 'submit-iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+
+  var form = document.getElementById('submit-form');
+  if(form) form.parentNode.removeChild(form);
+  form = document.createElement('form');
+  form.id = 'submit-form';
+  form.method = 'POST';
+  form.action = SHEETS_URL;
+  form.target = 'submit-iframe';
+  form.style.display = 'none';
+
+  Object.keys(data).forEach(function(k){
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = k;
+    input.value = data[k];
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+
+  iframe.onload = function(){
     msg.className = 'submit-msg submit-ok';
     msg.style.display = 'block';
     msg.textContent = 'Respostas registradas com sucesso. Agradecemos sua participação nesta pesquisa.';
     btn.style.display = 'none';
     document.getElementById('prog').style.width = '100%';
     document.getElementById('prog-label').textContent = 'Concluído';
-  } catch(e) {
-    msg.className = 'submit-msg submit-err';
-    msg.style.display = 'block';
-    msg.textContent = 'Erro ao enviar. Verifique sua conexão e tente novamente.';
-    btn.disabled = false;
-    btn.textContent = 'Enviar respostas';
-  }
-}
-function saveUrl(){
-  var url = document.getElementById('sheets-url').value.trim();
-  SHEETS_URL = url;
-  try { localStorage.setItem('shadow_ai_sheets_url', url); } catch(e){}
-  updateUrlStatus();
-  alert('URL salva com sucesso.');
+  };
+
+  form.submit();
 }
 
-function updateUrlStatus(){
-  var url = document.getElementById('sheets-url').value.trim();
-  var st = document.getElementById('url-status');
-  if(!url){ st.className='status-badge s-warn'; st.textContent='Não configurada'; }
-  else if(!url.startsWith('https://script.google.com')){ st.className='status-badge s-err'; st.textContent='URL inválida'; }
-  else { st.className='status-badge s-ok'; st.textContent='Configurada'; }
-}
-
-function testUrl(){
-  var url = document.getElementById('sheets-url').value.trim();
-  if(!url){ alert('Insira a URL antes de testar.'); return; }
-  fetch(url).then(function(r){ return r.json(); }).then(function(d){
-    if(d.status === 'online') alert('Conexão bem-sucedida. O Web App está online.');
-    else alert('Web App respondeu, mas com status inesperado: ' + JSON.stringify(d));
-  }).catch(function(){ alert('Não foi possível conectar. Verifique se o Web App foi publicado corretamente com acesso público.'); });
-}
-
-function hideConfig(){
-  document.getElementById('config-card').style.display = 'none';
-}
-
-document.getElementById('sheets-url').addEventListener('input', updateUrlStatus);
 updateProgress();
 </script>
 </body>
