@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow AI na Prática Científica — Instrumento de Coleta</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#f0efe9;
+  --text:#1a1a18;--text2:#5a5a56;--text3:#8a8a84;
+  --border:rgba(0,0,0,0.10);--border2:rgba(0,0,0,0.18);
+  --accent:#1a4a8a;--accent-bg:#eef3fb;
+  --success-bg:#eaf3de;--success:#2d5a1a;
+  --error-bg:#fcebeb;--error:#8a2020;
+  --warn-bg:#faeeda;--warn:#7a4a10;
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#242422;--bg3:#2c2c28;
+    --text:#e8e8e2;--text2:#a8a8a0;--text3:#6a6a64;
+    --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.18);
+    --accent:#6090d0;--accent-bg:#1a2a3a;
+    --success-bg:#1a2e10;--success:#7ac050;
+    --error-bg:#2e1010;--error:#e07070;
+    --warn-bg:#2e2010;--warn:#e0a050;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg3);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh}
+.page-wrap{max-width:760px;margin:0 auto;padding:2rem 1.25rem 4rem}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem 2rem;margin-bottom:1rem}
+.survey-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:.35rem}
+.survey-meta{font-size:13px;color:var(--text2);line-height:1.5}
+.progress-wrap{margin-bottom:1.5rem}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.progress-label{font-size:12px;color:var(--text3);margin-top:.4rem;text-align:right}
+.block-tag{display:inline-block;background:var(--accent-bg);color:var(--accent);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .75rem;border-radius:var(--radius);margin-bottom:1.25rem}
+.q-wrap{margin-bottom:1.75rem}
+.q-label{font-size:15px;color:var(--text);line-height:1.6;margin-bottom:.75rem;font-weight:500}
+.q-hint{font-size:12px;color:var(--text3);margin-bottom:.65rem;font-style:italic;margin-top:-.35rem}
+.required{color:#c0392b;margin-left:2px}
+.opt-list{display:flex;flex-direction:column;gap:.35rem}
+.opt{display:flex;align-items:flex-start;gap:.65rem;cursor:pointer;padding:.5rem .75rem;border-radius:var(--radius);border:0.5px solid transparent;transition:background .1s,border-color .1s;user-select:none}
+.opt:hover{background:var(--bg2);border-color:var(--border)}
+.opt input{margin-top:3px;flex-shrink:0;accent-color:var(--accent)}
+.opt span{font-size:14px;color:var(--text);line-height:1.5}
+.scale-wrap{overflow-x:auto}
+.scale-table{min-width:320px;width:100%;border-collapse:collapse;font-size:13px}
+.scale-table th{font-weight:400;color:var(--text2);text-align:center;padding:.4rem .3rem;font-size:11px;line-height:1.4;white-space:nowrap}
+.scale-table td{text-align:center;padding:.55rem .3rem;border-top:0.5px solid var(--border)}
+.scale-table input{accent-color:var(--accent)}
+.matrix-wrap{overflow-x:auto}
+.matrix-table{min-width:380px;width:100%;border-collapse:collapse;font-size:13px}
+.matrix-table th{font-weight:500;color:var(--text2);padding:.4rem .5rem;font-size:11px;text-align:center;background:var(--bg2);border:0.5px solid var(--border)}
+.matrix-table th:first-child{text-align:left}
+.matrix-table td{padding:.55rem .5rem;border:0.5px solid var(--border);text-align:center}
+.matrix-table td:first-child{text-align:left;font-size:13px;color:var(--text);background:var(--bg)}
+.matrix-table tr:nth-child(even) td:first-child{background:var(--bg2)}
+.matrix-table input{accent-color:var(--accent)}
+.vinheta{background:var(--bg2);border-left:3px solid var(--border2);border-radius:0 var(--radius) var(--radius) 0;padding:.9rem 1.1rem;margin-bottom:1rem;font-size:13px;color:var(--text2);line-height:1.65}
+.vinheta em{color:var(--text);font-style:italic}
+textarea{width:100%;min-height:100px;font-size:14px;padding:.65rem .85rem;border:0.5px solid var(--border2);border-radius:var(--radius);font-family:inherit;color:var(--text);background:var(--bg);resize:vertical;line-height:1.5}
+textarea:focus{outline:none;border-color:var(--accent)}
+.err{font-size:12px;color:var(--error);margin-top:.35rem;display:none}
+.err.show{display:block}
+.nav{display:flex;align-items:center;justify-content:space-between;padding-top:1.25rem;border-top:0.5px solid var(--border);margin-top:.5rem;flex-wrap:wrap;gap:.75rem}
+.nav-info{font-size:13px;color:var(--text3)}
+.nav-btns{display:flex;gap:.65rem}
+.btn{font-size:14px;padding:.55rem 1.35rem;border-radius:var(--radius);cursor:pointer;font-family:inherit;transition:opacity .15s,background .15s;font-weight:500}
+.btn-sec{background:transparent;border:0.5px solid var(--border2);color:var(--text)}
+.btn-sec:hover{background:var(--bg2)}
+.btn-pri{background:var(--accent);border:none;color:#fff}
+.btn-pri:hover{opacity:.88}
+.btn-pri:disabled{opacity:.4;cursor:not-allowed}
+.section{display:none}
+.section.active{display:block}
+.config-card{background:var(--warn-bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.config-title{font-size:14px;font-weight:600;color:var(--warn);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.config-row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+.config-input{flex:1;min-width:200px;font-size:13px;padding:.5rem .75rem;border:0.5px solid var(--border2);border-radius:var(--radius);font-family:inherit;color:var(--text);background:var(--bg)}
+.config-input:focus{outline:none;border-color:var(--accent)}
+.status-badge{font-size:12px;padding:.25rem .65rem;border-radius:var(--radius);white-space:nowrap;font-weight:500}
+.s-ok{background:var(--success-bg);color:var(--success)}
+.s-warn{background:var(--warn-bg);color:var(--warn)}
+.s-err{background:var(--error-bg);color:var(--error)}
+.submit-msg{padding:1.1rem 1.25rem;border-radius:var(--radius);margin-top:1.25rem;font-size:14px;line-height:1.6;display:none}
+.submit-ok{background:var(--success-bg);color:var(--success);display:block}
+.submit-err{background:var(--error-bg);color:var(--error);display:block}
+.tcle-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13px;color:var(--text2);line-height:1.7}
+.ended{text-align:center;padding:2.5rem 1rem;color:var(--text2);font-size:15px;line-height:1.7}
+@media(max-width:540px){
+  .card{padding:1.25rem 1rem}
+  .page-wrap{padding:1rem .75rem 3rem}
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="config-card" id="config-card">
+    <div class="config-title">&#9881; Configuração da integração — Google Sheets</div>
+    <p style="font-size:12px;color:var(--warn);margin-bottom:.85rem;line-height:1.5">Cole abaixo a URL do Web App publicado no Google Apps Script. Após inserir e salvar, este painel não ficará visível aos respondentes — remova-o ou oculte-o antes de distribuir o link.</p>
+    <div class="config-row">
+      <input class="config-input" type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/AKfy.../exec" />
+      <span class="status-badge s-warn" id="url-status">Não configurada</span>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:.65rem">A URL é salva localmente no navegador (localStorage). Respondentes que acessarem via link não verão esta configuração — ela deve ser feita pelo pesquisador no dispositivo que hospeda ou no arquivo antes do upload.</p>
+    <div style="margin-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="saveUrl()">Salvar URL</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem" onclick="testUrl()">Testar conexão</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:.35rem .85rem;color:var(--error)" onclick="hideConfig()">Ocultar painel (modo respondente)</button>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    <div class="progress-label" id="prog-label">Seção 1 de 9</div>
+  </div>
+
+  <!-- SEÇÃO 0 — TCLE -->
+  <div id="sec-0" class="section active">
+    <div class="card">
+      <div class="survey-title">Shadow AI na Prática Científica</div>
+      <div class="survey-meta">Detecção Automatizada, Prevalência e Implicações para a Integridade da Pesquisa<br>Público-alvo: professores e pesquisadores de programas de pós-graduação stricto sensu &nbsp;·&nbsp; Versão 1.0 &nbsp;·&nbsp; Abril de 2026</div>
+    </div>
+    <div class="card">
+      <div class="block-tag">Bloco 0 — Termo de Consentimento</div>
+      <div class="tcle-box">
+        Esta pesquisa tem como objetivo compreender o uso de ferramentas de inteligência artificial generativa (IAG) na prática científica de docentes e pesquisadores de programas de pós-graduação brasileiros, com ênfase nos padrões de divulgação e nas implicações para a integridade científica.<br><br>
+        A participação é voluntária e anônima. Os dados serão tratados de forma agregada e utilizados exclusivamente para fins científicos. Não há respostas certas ou erradas; solicita-se apenas sinceridade. O tempo estimado de resposta é de 12 a 18 minutos.
+      </div>
+      <div class="q-wrap">
+        <div class="q-label">0.1. Declaro que li e compreendi as informações acima, e concordo em participar voluntariamente desta pesquisa.<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q01">
+          <label class="opt"><input type="radio" name="q01" value="sim"><span>Sim, concordo em participar.</span></label>
+          <label class="opt"><input type="radio" name="q01" value="nao"><span>Não concordo em participar.</span></label>
+        </div>
+        <div class="err" id="err-q01">Por favor, selecione uma opção para continuar.</div>
+      </div>
+      <div class="nav">
+        <span class="nav-info">Seção 1 de 9</span>
+        <div class="nav-btns"><button class="btn btn-pri" onclick="goNext(0)">Próximo</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 1 — PERFIL -->
+  <div id="sec-1" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 1 — Perfil do respondente</div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.1. Qual é a sua principal área do conhecimento, conforme a tabela de áreas do CNPq/CAPES?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q11">
+          <label class="opt"><input type="radio" name="q11" value="Ciências Exatas e da Terra"><span>Ciências Exatas e da Terra</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Ciências Biológicas"><span>Ciências Biológicas</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Engenharias"><span>Engenharias</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Ciências da Saúde"><span>Ciências da Saúde</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Ciências Agrárias"><span>Ciências Agrárias</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Ciências Sociais Aplicadas"><span>Ciências Sociais Aplicadas</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Ciências Humanas"><span>Ciências Humanas</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Linguística, Letras e Artes"><span>Linguística, Letras e Artes</span></label>
+          <label class="opt"><input type="radio" name="q11" value="Multidisciplinar / Interdisciplinar"><span>Multidisciplinar / Interdisciplinar</span></label>
+        </div>
+        <div class="err" id="err-q11">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.2. Há quantos anos você atua como docente ou pesquisador em programas de pós-graduação stricto sensu?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q12">
+          <label class="opt"><input type="radio" name="q12" value="Menos de 5 anos"><span>Menos de 5 anos</span></label>
+          <label class="opt"><input type="radio" name="q12" value="De 5 a 10 anos"><span>De 5 a 10 anos</span></label>
+          <label class="opt"><input type="radio" name="q12" value="De 11 a 20 anos"><span>De 11 a 20 anos</span></label>
+          <label class="opt"><input type="radio" name="q12" value="Mais de 20 anos"><span>Mais de 20 anos</span></label>
+        </div>
+        <div class="err" id="err-q12">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.3. Em qual nível você orienta pesquisadores de pós-graduação? (Selecione todas que se aplicam.)<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q13">
+          <label class="opt"><input type="checkbox" name="q13" value="Mestrado"><span>Mestrado (acadêmico ou profissional)</span></label>
+          <label class="opt"><input type="checkbox" name="q13" value="Doutorado"><span>Doutorado</span></label>
+          <label class="opt"><input type="checkbox" name="q13" value="Pós-doutorado"><span>Pós-doutorado</span></label>
+          <label class="opt"><input type="checkbox" name="q13" value="Não oriento atualmente"><span>Não oriento atualmente.</span></label>
+        </div>
+        <div class="err" id="err-q13">Selecione ao menos uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.4. Quantos artigos científicos em periódicos revisados por pares você publicou nos últimos três anos?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q14">
+          <label class="opt"><input type="radio" name="q14" value="Nenhum"><span>Nenhum</span></label>
+          <label class="opt"><input type="radio" name="q14" value="De 1 a 3"><span>De 1 a 3</span></label>
+          <label class="opt"><input type="radio" name="q14" value="De 4 a 7"><span>De 4 a 7</span></label>
+          <label class="opt"><input type="radio" name="q14" value="De 8 a 12"><span>De 8 a 12</span></label>
+          <label class="opt"><input type="radio" name="q14" value="Mais de 12"><span>Mais de 12</span></label>
+        </div>
+        <div class="err" id="err-q14">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.5. Qual é a sua maior titulação acadêmica?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q15">
+          <label class="opt"><input type="radio" name="q15" value="Mestrado"><span>Mestrado</span></label>
+          <label class="opt"><input type="radio" name="q15" value="Doutorado"><span>Doutorado</span></label>
+          <label class="opt"><input type="radio" name="q15" value="Livre-docência"><span>Livre-docência</span></label>
+          <label class="opt"><input type="radio" name="q15" value="Professor Titular / Associado"><span>Professor Titular / Professor Associado</span></label>
+        </div>
+        <div class="err" id="err-q15">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.6. Como você se identifica em termos de gênero? (Opcional)</div>
+        <div class="opt-list">
+          <label class="opt"><input type="radio" name="q16" value="Homem cisgênero"><span>Homem cisgênero</span></label>
+          <label class="opt"><input type="radio" name="q16" value="Mulher cisgênero"><span>Mulher cisgênero</span></label>
+          <label class="opt"><input type="radio" name="q16" value="Não-binário(a)"><span>Não-binário(a)</span></label>
+          <label class="opt"><input type="radio" name="q16" value="Prefiro não declarar"><span>Prefiro não declarar</span></label>
+        </div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">1.7. Em qual região do Brasil está vinculada sua principal instituição de pesquisa?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q17">
+          <label class="opt"><input type="radio" name="q17" value="Norte"><span>Norte</span></label>
+          <label class="opt"><input type="radio" name="q17" value="Nordeste"><span>Nordeste</span></label>
+          <label class="opt"><input type="radio" name="q17" value="Centro-Oeste"><span>Centro-Oeste</span></label>
+          <label class="opt"><input type="radio" name="q17" value="Sudeste"><span>Sudeste</span></label>
+          <label class="opt"><input type="radio" name="q17" value="Sul"><span>Sul</span></label>
+          <label class="opt"><input type="radio" name="q17" value="Fora do Brasil"><span>Fora do Brasil</span></label>
+        </div>
+        <div class="err" id="err-q17">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 2 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(1)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(1)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2 — CONTEXTO INSTITUCIONAL -->
+  <div id="sec-2" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 2 — Contexto institucional</div>
+
+      <div class="q-wrap">
+        <div class="q-label">2.1. Sua instituição possui política formal e documentada sobre o uso de inteligência artificial generativa (IAG) em pesquisas e publicações científicas?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q21">
+          <label class="opt"><input type="radio" name="q21" value="Sim — política formal pública"><span>Sim, existe política formal disponível publicamente.</span></label>
+          <label class="opt"><input type="radio" name="q21" value="Sim — política formal não divulgada"><span>Sim, existe política formal, mas não é amplamente divulgada.</span></label>
+          <label class="opt"><input type="radio" name="q21" value="Em elaboração"><span>Está em processo de elaboração.</span></label>
+          <label class="opt"><input type="radio" name="q21" value="Não existe"><span>Não existe política formal.</span></label>
+          <label class="opt"><input type="radio" name="q21" value="Desconheço"><span>Não tenho conhecimento sobre a existência de tal política.</span></label>
+        </div>
+        <div class="err" id="err-q21">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">2.2. Você conhece as diretrizes dos principais periódicos de sua área sobre o uso e a declaração de IAG em manuscritos?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q22">
+          <label class="opt"><input type="radio" name="q22" value="Conheço e sigo sistematicamente"><span>Sim, conheço e as sigo sistematicamente.</span></label>
+          <label class="opt"><input type="radio" name="q22" value="Conheço mas nem sempre sigo"><span>Sim, conheço, mas nem sempre as sigo.</span></label>
+          <label class="opt"><input type="radio" name="q22" value="Conheço parcialmente"><span>Conheço apenas parcialmente.</span></label>
+          <label class="opt"><input type="radio" name="q22" value="Não conheço"><span>Não conheço.</span></label>
+        </div>
+        <div class="err" id="err-q22">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">2.3. Você segue as orientações formais de sua instituição sobre o uso de IAG em pesquisa?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q23">
+          <label class="opt"><input type="radio" name="q23" value="Sigo rigorosamente"><span>Sim, sigo rigorosamente.</span></label>
+          <label class="opt"><input type="radio" name="q23" value="Sigo quando conveniente"><span>Sigo quando conveniente.</span></label>
+          <label class="opt"><input type="radio" name="q23" value="Raramente sigo"><span>Raramente sigo.</span></label>
+          <label class="opt"><input type="radio" name="q23" value="Não — sem orientação formal"><span>Não, porque minha instituição não possui tal orientação formal.</span></label>
+          <label class="opt"><input type="radio" name="q23" value="Não — outros motivos"><span>Não, por outros motivos.</span></label>
+        </div>
+        <div class="err" id="err-q23">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">2.4. Sua instituição comunicou formalmente suas orientações sobre IAG na pesquisa nos últimos 12 meses?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q24">
+          <label class="opt"><input type="radio" name="q24" value="Sim — comunicação oficial"><span>Sim, houve comunicação oficial (e-mail institucional, resolução, portaria ou reunião formal).</span></label>
+          <label class="opt"><input type="radio" name="q24" value="Menções informais"><span>Houve menções informais, mas sem comunicação oficial.</span></label>
+          <label class="opt"><input type="radio" name="q24" value="Sem comunicação"><span>Não houve qualquer comunicação.</span></label>
+          <label class="opt"><input type="radio" name="q24" value="Não sei"><span>Não sei.</span></label>
+        </div>
+        <div class="err" id="err-q24">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">2.5. Você já recebeu comunicação de revisores ou editores de periódicos questionando o uso de IAG em manuscritos de sua autoria?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q25">
+          <label class="opt"><input type="radio" name="q25" value="Sim — esclarecimentos"><span>Sim, com solicitação de esclarecimentos.</span></label>
+          <label class="opt"><input type="radio" name="q25" value="Sim — inclusão de declaração"><span>Sim, com recomendação de inclusão de declaração.</span></label>
+          <label class="opt"><input type="radio" name="q25" value="Sim — rejeição"><span>Sim, resultando na rejeição do manuscrito.</span></label>
+          <label class="opt"><input type="radio" name="q25" value="Não"><span>Não.</span></label>
+        </div>
+        <div class="err" id="err-q25">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">2.6. Quando utilizo recursos computacionais da minha instituição (internet, softwares, infraestrutura de TI), faço-o exclusivamente para fins acadêmicos e profissionais.<span class="required">*</span></div>
+        <div class="q-hint">1 = Discordo totalmente · 5 = Concordo totalmente</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q26">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Indiferente</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q26" value="1"></td><td><input type="radio" name="q26" value="2"></td><td><input type="radio" name="q26" value="3"></td><td><input type="radio" name="q26" value="4"></td><td><input type="radio" name="q26" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q26">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 3 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(2)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(2)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 3 — CONHECIMENTO -->
+  <div id="sec-3" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 3 — Conhecimento sobre Shadow AI e ferramentas de IAG</div>
+
+      <div class="q-wrap">
+        <div class="q-label">3.1. Antes de receber este questionário, você conhecia o conceito de "Shadow AI" aplicado à prática científica?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q31">
+          <label class="opt"><input type="radio" name="q31" value="Conheço e acompanho a literatura"><span>Sim, conheço e acompanho a literatura sobre o tema.</span></label>
+          <label class="opt"><input type="radio" name="q31" value="Já havia encontrado o termo"><span>Sim, já havia encontrado o termo.</span></label>
+          <label class="opt"><input type="radio" name="q31" value="Nunca havia encontrado"><span>Nunca havia encontrado este termo.</span></label>
+          <label class="opt"><input type="radio" name="q31" value="Não conhecia, compreendo após leitura"><span>Não conhecia o termo, mas compreendo seu significado após a leitura da apresentação desta pesquisa.</span></label>
+        </div>
+        <div class="err" id="err-q31">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">3.2. Das ferramentas de inteligência artificial generativa listadas a seguir, quais você já utilizou em atividades de pesquisa científica? (Selecione todas que se aplicam.)<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q32">
+          <label class="opt"><input type="checkbox" name="q32" value="ChatGPT (OpenAI)"><span>ChatGPT (OpenAI)</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Claude (Anthropic)"><span>Claude (Anthropic)</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Gemini (Google)"><span>Gemini (Google)</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Copilot / Bing Chat (Microsoft)"><span>Copilot / Bing Chat (Microsoft)</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Perplexity AI"><span>Perplexity AI</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="ResearchMind AI"><span>ResearchMind AI</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Llama / Mistral (código aberto)"><span>Llama / Mistral (modelos de código aberto)</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Grok (xAI)"><span>Grok (xAI)</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="ScholarBot Pro"><span>ScholarBot Pro</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Consensus"><span>Consensus</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Elicit"><span>Elicit</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="AcademiAI Research Suite"><span>AcademiAI Research Suite</span></label>
+          <label class="opt"><input type="checkbox" name="q32" value="Nunca utilizei IAG em pesquisa"><span>Nunca utilizei IAG em atividades de pesquisa.</span></label>
+        </div>
+        <div class="err" id="err-q32">Selecione ao menos uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">3.3. A inteligência artificial generativa representa uma transformação significativa nas metodologias de pesquisa científica.<span class="required">*</span></div>
+        <div class="q-hint">Para garantir a qualidade dos dados desta pesquisa, selecione "Concordo totalmente" nesta afirmativa. · 1 = Discordo totalmente · 5 = Concordo totalmente</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q33">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Indiferente</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q33" value="1"></td><td><input type="radio" name="q33" value="2"></td><td><input type="radio" name="q33" value="3"></td><td><input type="radio" name="q33" value="4"></td><td><input type="radio" name="q33" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q33">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">3.4. Em sua opinião, qual é o principal risco do Shadow AI para a integridade científica?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q34">
+          <label class="opt"><input type="radio" name="q34" value="Impossibilidade de replicação metodológica"><span>Impossibilidade de replicação metodológica.</span></label>
+          <label class="opt"><input type="radio" name="q34" value="Violação de direitos autorais e PI"><span>Violação de direitos autorais e propriedade intelectual.</span></label>
+          <label class="opt"><input type="radio" name="q34" value="Atribuição incorreta de contribuições"><span>Atribuição incorreta de contribuições intelectuais.</span></label>
+          <label class="opt"><input type="radio" name="q34" value="Viés algorítmico nos resultados"><span>Viés algorítmico nos resultados.</span></label>
+          <label class="opt"><input type="radio" name="q34" value="Erosão da confiança na revisão por pares"><span>Erosão da confiança na revisão por pares.</span></label>
+          <label class="opt"><input type="radio" name="q34" value="Outro"><span>Outro.</span></label>
+        </div>
+        <div class="err" id="err-q34">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">3.5. Você considera que as diretrizes atuais sobre o uso de IAG em pesquisa são suficientemente claras para orientar a prática dos pesquisadores?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q35">
+          <label class="opt"><input type="radio" name="q35" value="Sim — claras e abrangentes"><span>Sim, são claras e abrangentes.</span></label>
+          <label class="opt"><input type="radio" name="q35" value="Parcialmente claras"><span>São parcialmente claras.</span></label>
+          <label class="opt"><input type="radio" name="q35" value="Ambíguas ou incompletas"><span>São ambíguas ou incompletas.</span></label>
+          <label class="opt"><input type="radio" name="q35" value="Não existem diretrizes suficientes"><span>Não existem diretrizes suficientes.</span></label>
+          <label class="opt"><input type="radio" name="q35" value="Não conheço as diretrizes"><span>Não conheço as diretrizes existentes.</span></label>
+        </div>
+        <div class="err" id="err-q35">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 4 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(3)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(3)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 4 — PERCEPÇÕES ÉTICAS -->
+  <div id="sec-4" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 4 — Percepções sobre integridade e ética no uso de IAG</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:1.25rem">Escala: 1 = Discordo totalmente · 5 = Concordo totalmente</p>
+
+      <div class="q-wrap">
+        <div class="q-label">4.1. O uso de IAG para aprimorar a clareza e a qualidade da escrita em artigos científicos é eticamente aceitável, desde que declarado.<span class="required">*</span></div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q41">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q41" value="1"></td><td><input type="radio" name="q41" value="2"></td><td><input type="radio" name="q41" value="3"></td><td><input type="radio" name="q41" value="4"></td><td><input type="radio" name="q41" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q41">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.2. O uso de IAG para auxiliar a análise de dados em pesquisas científicas é eticamente aceitável, desde que declarado.<span class="required">*</span></div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q42">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q42" value="1"></td><td><input type="radio" name="q42" value="2"></td><td><input type="radio" name="q42" value="3"></td><td><input type="radio" name="q42" value="4"></td><td><input type="radio" name="q42" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q42">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.3. A declaração do uso de IAG em artigos científicos é uma obrigação ética, independentemente do nível ou da extensão do uso.<span class="required">*</span></div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q43">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q43" value="1"></td><td><input type="radio" name="q43" value="2"></td><td><input type="radio" name="q43" value="3"></td><td><input type="radio" name="q43" value="4"></td><td><input type="radio" name="q43" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q43">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.4. O não-disclosure do uso de IAG em publicações científicas não compromete a integridade da pesquisa, desde que os resultados sejam tecnicamente corretos.<span class="required">*</span></div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q44">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q44" value="1"></td><td><input type="radio" name="q44" value="2"></td><td><input type="radio" name="q44" value="3"></td><td><input type="radio" name="q44" value="4"></td><td><input type="radio" name="q44" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q44">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.5. Vinheta A — avalie a aceitabilidade ética do cenário descrito.<span class="required">*</span></div>
+        <div class="vinheta">Um pesquisador utilizou IAG para revisar e aprimorar <em>linguisticamente</em> todo o texto de seu artigo, mas não declarou esse uso. Os resultados científicos são originais e metodologicamente corretos. Os autores e contribuições intelectuais foram atribuídos corretamente.</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q45">
+          <tr><th>1<br>Totalmente inaceitável</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Totalmente aceitável</th></tr>
+          <tr><td><input type="radio" name="q45" value="1"></td><td><input type="radio" name="q45" value="2"></td><td><input type="radio" name="q45" value="3"></td><td><input type="radio" name="q45" value="4"></td><td><input type="radio" name="q45" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q45">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.6. Vinheta B — avalie a aceitabilidade ética do cenário descrito.<span class="required">*</span></div>
+        <div class="vinheta">Uma pesquisadora utilizou IAG para identificar lacunas bibliográficas e sugerir hipóteses de pesquisa, mas atribuiu essas contribuições intelectuais integralmente a si mesma no artigo submetido, sem qualquer declaração de uso de IAG.</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q46">
+          <tr><th>1<br>Totalmente inaceitável</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Totalmente aceitável</th></tr>
+          <tr><td><input type="radio" name="q46" value="1"></td><td><input type="radio" name="q46" value="2"></td><td><input type="radio" name="q46" value="3"></td><td><input type="radio" name="q46" value="4"></td><td><input type="radio" name="q46" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q46">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.7. Nunca senti qualquer tentação de utilizar IAG de forma não declarada em minha produção científica.<span class="required">*</span></div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q47">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q47" value="1"></td><td><input type="radio" name="q47" value="2"></td><td><input type="radio" name="q47" value="3"></td><td><input type="radio" name="q47" value="4"></td><td><input type="radio" name="q47" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q47">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">4.8. A pressão institucional por produtividade científica (publish or perish) justifica, em alguma medida, o uso não declarado de IAG em pesquisa.<span class="required">*</span></div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q48">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q48" value="1"></td><td><input type="radio" name="q48" value="2"></td><td><input type="radio" name="q48" value="3"></td><td><input type="radio" name="q48" value="4"></td><td><input type="radio" name="q48" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q48">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 5 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(4)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(4)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 5 — COMPORTAMENTO PESSOAL -->
+  <div id="sec-5" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 5 — Comportamento pessoal no uso de IAG em pesquisa</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:1.25rem;line-height:1.5">As questões a seguir referem-se ao comportamento do próprio respondente. As respostas são anônimas.</p>
+
+      <div class="q-wrap">
+        <div class="q-label">5.1. Com que frequência você utiliza IAG em suas atividades de pesquisa científica?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q51">
+          <label class="opt"><input type="radio" name="q51" value="Nunca utilizei"><span>Nunca utilizei.</span></label>
+          <label class="opt"><input type="radio" name="q51" value="Raramente (1–2 vezes/ano)"><span>Raramente (1 a 2 vezes por ano).</span></label>
+          <label class="opt"><input type="radio" name="q51" value="Ocasionalmente (< 1 vez/mês)"><span>Ocasionalmente (menos de uma vez por mês).</span></label>
+          <label class="opt"><input type="radio" name="q51" value="Regularmente (algumas vezes/mês)"><span>Regularmente (algumas vezes por mês).</span></label>
+          <label class="opt"><input type="radio" name="q51" value="Frequentemente (semanal ou mais)"><span>Frequentemente (semanalmente ou com maior frequência).</span></label>
+        </div>
+        <div class="err" id="err-q51">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.2. Para quais finalidades você utiliza (ou utilizou) IAG em suas atividades de pesquisa? (Selecione todas que se aplicam.)<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q52">
+          <label class="opt"><input type="checkbox" name="q52" value="Escrita em língua estrangeira"><span>Revisão e aprimoramento da escrita em língua estrangeira.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Escrita em português"><span>Revisão e aprimoramento da escrita em português.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Busca e síntese bibliográfica"><span>Busca, seleção e síntese bibliográfica.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Análise e visualização de dados"><span>Análise, interpretação ou visualização de dados.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Geração de hipóteses"><span>Geração ou refinamento de hipóteses de pesquisa.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Elaboração de instrumentos de coleta"><span>Elaboração de instrumentos de coleta de dados (questionários, roteiros).</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Código para análise"><span>Revisão ou geração de código para análise estatística ou computacional.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Respostas a revisores"><span>Elaboração de respostas a revisores de periódicos.</span></label>
+          <label class="opt"><input type="checkbox" name="q52" value="Não utilizo IAG em pesquisa"><span>Não utilizo IAG em pesquisa.</span></label>
+        </div>
+        <div class="err" id="err-q52">Selecione ao menos uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.3. Considerando os três artigos científicos mais recentes que você publicou ou submeteu: em quantos deles foi utilizada IAG generativa em alguma etapa do processo?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q53">
+          <label class="opt"><input type="radio" name="q53" value="Em nenhum (ou < 3 artigos em 2 anos)"><span>Em nenhum (ou submeti/publiquei menos de 3 artigos nos últimos 2 anos).</span></label>
+          <label class="opt"><input type="radio" name="q53" value="Em 1 dos 3"><span>Em 1 dos 3.</span></label>
+          <label class="opt"><input type="radio" name="q53" value="Em 2 dos 3"><span>Em 2 dos 3.</span></label>
+          <label class="opt"><input type="radio" name="q53" value="Nos 3"><span>Nos 3.</span></label>
+        </div>
+        <div class="err" id="err-q53">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.4. Sempre que utilizo IAG em artigos científicos, declaro explicitamente esse uso nas seções pertinentes do manuscrito.<span class="required">*</span></div>
+        <div class="q-hint">1 = Discordo totalmente · 5 = Concordo totalmente</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q54">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q54" value="1"></td><td><input type="radio" name="q54" value="2"></td><td><input type="radio" name="q54" value="3"></td><td><input type="radio" name="q54" value="4"></td><td><input type="radio" name="q54" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q54">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.5. Já submeti ou publiquei pelo menos um artigo científico no qual utilizei IAG sem declarar explicitamente esse uso.<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q55">
+          <label class="opt"><input type="radio" name="q55" value="Sim — mais de um artigo"><span>Sim, em mais de um artigo.</span></label>
+          <label class="opt"><input type="radio" name="q55" value="Sim — exatamente um artigo"><span>Sim, em exatamente um artigo.</span></label>
+          <label class="opt"><input type="radio" name="q55" value="Não — nunca sem declarar"><span>Não, nunca utilizei IAG sem declarar.</span></label>
+          <label class="opt"><input type="radio" name="q55" value="Não utilizei IAG em artigos"><span>Não utilizei IAG em artigos científicos.</span></label>
+        </div>
+        <div class="err" id="err-q55">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.6. Quando declara o uso de IAG em seus artigos científicos, em qual seção ou formato essa declaração normalmente aparece? (Selecione todas que se aplicam.)<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q56">
+          <label class="opt"><input type="checkbox" name="q56" value="Seção de Agradecimentos"><span>Seção de Agradecimentos.</span></label>
+          <label class="opt"><input type="checkbox" name="q56" value="Seção de Métodos"><span>Seção de Métodos / Metodologia.</span></label>
+          <label class="opt"><input type="checkbox" name="q56" value="Declaração específica (AI Statement)"><span>Declaração específica (AI Statement) requerida pelo periódico.</span></label>
+          <label class="opt"><input type="checkbox" name="q56" value="Nota de rodapé"><span>Nota de rodapé.</span></label>
+          <label class="opt"><input type="checkbox" name="q56" value="Menção no corpo do texto"><span>Não incluo em seção específica; menciono no corpo do texto.</span></label>
+          <label class="opt"><input type="checkbox" name="q56" value="Sem qualquer declaração"><span>Já utilizei IAG sem incluir qualquer declaração.</span></label>
+          <label class="opt"><input type="checkbox" name="q56" value="Não se aplica"><span>Não se aplica (não utilizo IAG em artigos).</span></label>
+        </div>
+        <div class="err" id="err-q56">Selecione ao menos uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.7. Na sua estimativa, que percentual dos professores e pesquisadores de pós-graduação brasileiros já utilizou IAG generativa em pelo menos um artigo científico sem declarar explicitamente esse uso?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q57">
+          <label class="opt"><input type="radio" name="q57" value="Menos de 10%"><span>Menos de 10%.</span></label>
+          <label class="opt"><input type="radio" name="q57" value="Entre 10% e 30%"><span>Entre 10% e 30%.</span></label>
+          <label class="opt"><input type="radio" name="q57" value="Entre 31% e 50%"><span>Entre 31% e 50%.</span></label>
+          <label class="opt"><input type="radio" name="q57" value="Entre 51% e 70%"><span>Entre 51% e 70%.</span></label>
+          <label class="opt"><input type="radio" name="q57" value="Mais de 70%"><span>Mais de 70%.</span></label>
+        </div>
+        <div class="err" id="err-q57">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.8. Aproximadamente qual percentual dos artigos científicos que você submeteu ou publicou nos últimos dois anos incluiu o uso de IAG generativa sem declaração explícita?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q58">
+          <label class="opt"><input type="radio" name="q58" value="Nenhum (0%)"><span>Nenhum (0%).</span></label>
+          <label class="opt"><input type="radio" name="q58" value="Menos de 25%"><span>Menos de 25%.</span></label>
+          <label class="opt"><input type="radio" name="q58" value="Entre 25% e 50%"><span>Entre 25% e 50%.</span></label>
+          <label class="opt"><input type="radio" name="q58" value="Mais de 50%"><span>Mais de 50%.</span></label>
+        </div>
+        <div class="err" id="err-q58">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.9. Suponha que fosse tecnicamente impossível detectar o uso de IAG em textos científicos. Nesse cenário hipotético, como sua conduta em relação ao uso e à declaração de IAG em publicações científicas mudaria?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q59">
+          <label class="opt"><input type="radio" name="q59" value="Não mudaria nada"><span>Não mudaria nada; minha conduta seria exatamente a mesma.</span></label>
+          <label class="opt"><input type="radio" name="q59" value="Mesma frequência, menor rigor de declaração"><span>Usaria IAG com a mesma frequência, mas declararia com menos rigor.</span></label>
+          <label class="opt"><input type="radio" name="q59" value="Maior frequência, mesma declaração"><span>Usaria IAG com mais frequência, mantendo a mesma conduta de declaração.</span></label>
+          <label class="opt"><input type="radio" name="q59" value="Maior frequência, menor preocupação em declarar"><span>Usaria IAG com mais frequência e com menor preocupação em declarar.</span></label>
+        </div>
+        <div class="err" id="err-q59">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.10. Você já orientou explicitamente seus estudantes de pós-graduação sobre a necessidade de declarar o uso de IAG em dissertações, teses ou artigos?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q510">
+          <label class="opt"><input type="radio" name="q510" value="Sim — sistemática e documentada"><span>Sim, de forma sistemática e documentada.</span></label>
+          <label class="opt"><input type="radio" name="q510" value="Sim — informal e ocasional"><span>Sim, de forma informal e ocasional.</span></label>
+          <label class="opt"><input type="radio" name="q510" value="Não, mas pretendo"><span>Não, mas pretendo fazê-lo.</span></label>
+          <label class="opt"><input type="radio" name="q510" value="Não — sem orientação do programa"><span>Não, porque meu programa não tem orientação nesse sentido.</span></label>
+          <label class="opt"><input type="radio" name="q510" value="Não considero necessário"><span>Não considero necessário.</span></label>
+        </div>
+        <div class="err" id="err-q510">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">5.11. Nos últimos 12 meses, você avaliou ou revisou trabalhos científicos (dissertações, teses ou artigos) que apresentavam indícios de uso não declarado de IAG?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q511">
+          <label class="opt"><input type="radio" name="q511" value="Sim — alerta formal"><span>Sim, e alertei formalmente o autor ou orientador.</span></label>
+          <label class="opt"><input type="radio" name="q511" value="Sim — alerta informal"><span>Sim, e alertei informalmente.</span></label>
+          <label class="opt"><input type="radio" name="q511" value="Sim — sem providência"><span>Sim, mas não tomei qualquer providência.</span></label>
+          <label class="opt"><input type="radio" name="q511" value="Não identifiquei indícios"><span>Não identifiquei tais indícios.</span></label>
+          <label class="opt"><input type="radio" name="q511" value="Não avaliei trabalhos"><span>Não avaliei trabalhos nesse período.</span></label>
+        </div>
+        <div class="err" id="err-q511">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 6 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(5)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(5)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 6 — PRESSÕES CONTEXTUAIS -->
+  <div id="sec-6" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 6 — Pressões contextuais e fatores condicionantes</div>
+
+      <div class="q-wrap">
+        <div class="q-label">6.1. Avalie o grau em que cada fator a seguir contribui para o uso não declarado de IAG na pesquisa científica.<span class="required">*</span></div>
+        <div class="q-hint">1 = Não contribui · 5 = Contribui muito</div>
+        <div class="matrix-wrap">
+        <table class="matrix-table" id="grp-q61">
+          <tr><th style="min-width:200px">Fator</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+          <tr><td>Pressão institucional (publish or perish)</td><td><input type="radio" name="q61a" value="1"></td><td><input type="radio" name="q61a" value="2"></td><td><input type="radio" name="q61a" value="3"></td><td><input type="radio" name="q61a" value="4"></td><td><input type="radio" name="q61a" value="5"></td></tr>
+          <tr><td>Ausência de diretrizes claras</td><td><input type="radio" name="q61b" value="1"></td><td><input type="radio" name="q61b" value="2"></td><td><input type="radio" name="q61b" value="3"></td><td><input type="radio" name="q61b" value="4"></td><td><input type="radio" name="q61b" value="5"></td></tr>
+          <tr><td>Baixo risco percebido de detecção</td><td><input type="radio" name="q61c" value="1"></td><td><input type="radio" name="q61c" value="2"></td><td><input type="radio" name="q61c" value="3"></td><td><input type="radio" name="q61c" value="4"></td><td><input type="radio" name="q61c" value="5"></td></tr>
+          <tr><td>Normalização pelo grupo de pares</td><td><input type="radio" name="q61d" value="1"></td><td><input type="radio" name="q61d" value="2"></td><td><input type="radio" name="q61d" value="3"></td><td><input type="radio" name="q61d" value="4"></td><td><input type="radio" name="q61d" value="5"></td></tr>
+          <tr><td>Desconhecimento das implicações éticas</td><td><input type="radio" name="q61e" value="1"></td><td><input type="radio" name="q61e" value="2"></td><td><input type="radio" name="q61e" value="3"></td><td><input type="radio" name="q61e" value="4"></td><td><input type="radio" name="q61e" value="5"></td></tr>
+        </table>
+        </div>
+        <div class="err" id="err-q61">Responda todos os fatores da tabela.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">6.2. Você acredita que a adoção de IAG generativa em sua rotina de pesquisa melhorou sua produtividade científica?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q62">
+          <label class="opt"><input type="radio" name="q62" value="Sim — significativamente"><span>Sim, melhorou significativamente.</span></label>
+          <label class="opt"><input type="radio" name="q62" value="Sim — marginalmente"><span>Sim, melhorou de forma marginal.</span></label>
+          <label class="opt"><input type="radio" name="q62" value="Não utilizei suficientemente para avaliar"><span>Não utilizei IAG suficientemente para avaliar.</span></label>
+          <label class="opt"><input type="radio" name="q62" value="Não melhorou ou impacto negativo"><span>Não melhorou ou teve impacto negativo.</span></label>
+        </div>
+        <div class="err" id="err-q62">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">6.3. O receio de penalidades institucionais ou editoriais influencia sua decisão sobre declarar ou não o uso de IAG em publicações?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q63">
+          <label class="opt"><input type="radio" name="q63" value="Sim — principal motivador"><span>Sim, é o principal motivador da declaração.</span></label>
+          <label class="opt"><input type="radio" name="q63" value="Sim — influencia, não é o principal"><span>Sim, influencia, mas não é o principal motivador.</span></label>
+          <label class="opt"><input type="radio" name="q63" value="Não — declaro por convicção ética"><span>Não influencia; declaro por convicção ética independente de penalidades.</span></label>
+          <label class="opt"><input type="radio" name="q63" value="Não — não declaro e não me preocupo"><span>Não influencia; não declaro e não me preocupo com penalidades.</span></label>
+        </div>
+        <div class="err" id="err-q63">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">6.4. Antes de utilizar qualquer ferramenta de IAG em minhas atividades de pesquisa, leio integralmente seus termos de uso e políticas de privacidade.<span class="required">*</span></div>
+        <div class="q-hint">1 = Discordo totalmente · 5 = Concordo totalmente</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q64">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q64" value="1"></td><td><input type="radio" name="q64" value="2"></td><td><input type="radio" name="q64" value="3"></td><td><input type="radio" name="q64" value="4"></td><td><input type="radio" name="q64" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q64">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 7 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(6)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(6)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 7 — DETECÇÃO -->
+  <div id="sec-7" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 7 — Detecção, rastreabilidade e percepção de risco</div>
+
+      <div class="q-wrap">
+        <div class="q-label">7.1. Você conhece ferramentas automatizadas de detecção de texto gerado por IAG? (Ex.: GPTZero, Turnitin AI Detection, Copyleaks, ZeroGPT.)<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q71">
+          <label class="opt"><input type="radio" name="q71" value="Sim — conheço e já utilizei"><span>Sim, conheço e já utilizei.</span></label>
+          <label class="opt"><input type="radio" name="q71" value="Sim — conheço, nunca utilizei"><span>Sim, conheço, mas nunca utilizei.</span></label>
+          <label class="opt"><input type="radio" name="q71" value="Já ouvi falar, não conheço em detalhe"><span>Já ouvi falar, mas não conheço em detalhe.</span></label>
+          <label class="opt"><input type="radio" name="q71" value="Não conheço"><span>Não conheço.</span></label>
+        </div>
+        <div class="err" id="err-q71">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">7.2. Quão eficazes você considera essas ferramentas para detectar o uso de IAG em textos científicos que foram revisados ou editados por humanos?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q72">
+          <label class="opt"><input type="radio" name="q72" value="Muito eficazes (> 80%)"><span>Muito eficazes (acima de 80% de acurácia).</span></label>
+          <label class="opt"><input type="radio" name="q72" value="Moderadamente eficazes (50–80%)"><span>Moderadamente eficazes (50% a 80% de acurácia).</span></label>
+          <label class="opt"><input type="radio" name="q72" value="Pouco eficazes (< 50%)"><span>Pouco eficazes (abaixo de 50% de acurácia).</span></label>
+          <label class="opt"><input type="radio" name="q72" value="Ineficazes em textos revisados"><span>Ineficazes em textos revisados por humanos.</span></label>
+          <label class="opt"><input type="radio" name="q72" value="Sem elementos para avaliar"><span>Não tenho elementos para avaliar.</span></label>
+        </div>
+        <div class="err" id="err-q72">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">7.3. Você já utilizou ferramentas de detecção de IAG para verificar seus próprios textos científicos antes de submetê-los a periódicos (nos últimos dois anos)?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q73">
+          <label class="opt"><input type="radio" name="q73" value="Sim — regularmente"><span>Sim, regularmente.</span></label>
+          <label class="opt"><input type="radio" name="q73" value="Sim — ocasionalmente"><span>Sim, ocasionalmente.</span></label>
+          <label class="opt"><input type="radio" name="q73" value="Não"><span>Não.</span></label>
+        </div>
+        <div class="err" id="err-q73">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">7.4. Considerando os textos científicos de sua autoria submetidos ou publicados nos últimos dois anos, você acredita que um revisor especializado em sua área seria capaz de identificar o uso de IAG nesses trabalhos?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q74">
+          <label class="opt"><input type="radio" name="q74" value="Sim — facilmente"><span>Sim, facilmente.</span></label>
+          <label class="opt"><input type="radio" name="q74" value="Sim — com alguma dificuldade"><span>Sim, com alguma dificuldade.</span></label>
+          <label class="opt"><input type="radio" name="q74" value="Dificilmente"><span>Dificilmente.</span></label>
+          <label class="opt"><input type="radio" name="q74" value="Não — praticamente impossível"><span>Não, seria praticamente impossível identificar.</span></label>
+        </div>
+        <div class="err" id="err-q74">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">7.5. A possibilidade de ser detectado(a) utilizando IAG sem declaração influencia suas decisões sobre a divulgação desse uso?<span class="required">*</span></div>
+        <div class="opt-list" id="grp-q75">
+          <label class="opt"><input type="radio" name="q75" value="Sim — principal razão para declarar"><span>Sim, é a principal razão pela qual me preocupo em declarar.</span></label>
+          <label class="opt"><input type="radio" name="q75" value="Sim — um dos fatores"><span>Sim, é um dos fatores considerados, entre outros.</span></label>
+          <label class="opt"><input type="radio" name="q75" value="Não — declaro por convicção ética"><span>Não influencia; declaro por convicção ética.</span></label>
+          <label class="opt"><input type="radio" name="q75" value="Não — não declaro e não me preocupo"><span>Não influencia; não declaro e não me preocupo com detecção.</span></label>
+        </div>
+        <div class="err" id="err-q75">Selecione uma opção.</div>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">7.6. Se minha instituição implementasse auditoria aleatória de artigos científicos por meio de ferramentas de detecção de IAG, não teria qualquer preocupação em relação à verificação dos meus trabalhos publicados recentemente.<span class="required">*</span></div>
+        <div class="q-hint">1 = Discordo totalmente · 5 = Concordo totalmente</div>
+        <div class="scale-wrap"><table class="scale-table" id="grp-q76">
+          <tr><th>1<br>Discordo totalmente</th><th>2</th><th>3<br>Neutro</th><th>4</th><th>5<br>Concordo totalmente</th></tr>
+          <tr><td><input type="radio" name="q76" value="1"></td><td><input type="radio" name="q76" value="2"></td><td><input type="radio" name="q76" value="3"></td><td><input type="radio" name="q76" value="4"></td><td><input type="radio" name="q76" value="5"></td></tr>
+        </table></div>
+        <div class="err" id="err-q76">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 8 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(7)">Anterior</button>
+          <button class="btn btn-pri" onclick="goNext(7)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 8 — CONSIDERAÇÕES FINAIS -->
+  <div id="sec-8" class="section">
+    <div class="card">
+      <div class="block-tag">Bloco 8 — Considerações finais</div>
+
+      <div class="q-wrap">
+        <div class="q-label">8.1. Em sua opinião, qual seria a medida mais eficaz para promover o uso ético e transparente de IAG na pesquisa científica brasileira? (Questão aberta — opcional.)</div>
+        <textarea name="q81" id="q81" placeholder="Digite sua resposta aqui..."></textarea>
+      </div>
+
+      <div class="q-wrap">
+        <div class="q-label">8.2. Você teria interesse em participar de uma etapa qualitativa desta pesquisa (entrevista semiestruturada de aproximadamente 30 minutos)?<span class="required">*</span></div>
+        <div class="q-hint">Em caso afirmativo, o contato será realizado por meio de formulário separado, garantindo a dissociação entre sua identificação e as respostas fornecidas neste questionário.</div>
+        <div class="opt-list" id="grp-q82">
+          <label class="opt"><input type="radio" name="q82" value="Sim — acessarei o formulário de contato"><span>Sim — acessarei o formulário separado de contato.</span></label>
+          <label class="opt"><input type="radio" name="q82" value="Não"><span>Não.</span></label>
+        </div>
+        <div class="err" id="err-q82">Selecione uma opção.</div>
+      </div>
+
+      <div class="nav">
+        <span class="nav-info">Seção 9 de 9</span>
+        <div class="nav-btns">
+          <button class="btn btn-sec" onclick="goPrev(8)">Anterior</button>
+          <button class="btn btn-pri" id="submit-btn" onclick="submitSurvey()">Enviar respostas</button>
+        </div>
+      </div>
+      <div id="submit-msg" class="submit-msg"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var SHEETS_URL = '';
+var cur = 0;
+var TOTAL = 9;
+
+(function(){
+  try {
+    var saved = localStorage.getItem('shadow_ai_sheets_url');
+    if(saved){ SHEETS_URL = saved; document.getElementById('sheets-url').value = saved; updateUrlStatus(); }
+  } catch(e){}
+})();
+
+function updateProgress(){
+  var pct = Math.round((cur / TOTAL) * 100);
+  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = 'Seção ' + (cur + 1) + ' de ' + TOTAL;
+}
+
+function showSection(n){
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('sec-' + n).classList.add('active');
+  cur = n;
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function getRadio(name){
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : null;
+}
+
+function getCheckboxes(name){
+  return Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(function(e){ return e.value; });
+}
+
+function setErr(id, show){
+  var el = document.getElementById('err-' + id);
+  if(el) el.className = 'err' + (show ? ' show' : '');
+}
+
+function validateSection(n){
+  var ok = true;
+  function req(id, val, multi){
+    var v = multi ? getCheckboxes(id).length > 0 : !!val;
+    setErr(id, !v);
+    if(!v) ok = false;
+  }
+  if(n === 0){
+    var v = getRadio('q01');
+    setErr('q01', !v);
+    if(!v){ ok = false; }
+    else if(v === 'nao'){
+      document.getElementById('sec-0').innerHTML = '<div class="card"><div class="ended"><p>Agradecemos sua atenção.<br>A participação nesta pesquisa é voluntária e você pode encerrá-la a qualquer momento.<br><br>O formulário foi encerrado.</p></div></div>';
+      document.getElementById('prog').style.width = '100%';
+      return false;
+    }
+  }
+  if(n === 1){
+    ['q11','q12','q14','q15','q17'].forEach(function(id){ req(id, getRadio(id)); });
+    req('q13', null, true);
+  }
+  if(n === 2){
+    ['q21','q22','q23','q24','q25'].forEach(function(id){ req(id, getRadio(id)); });
+    req('q26', getRadio('q26'));
+  }
+  if(n === 3){
+    ['q31','q34','q35'].forEach(function(id){ req(id, getRadio(id)); });
+    req('q32', null, true);
+    req('q33', getRadio('q33'));
+  }
+  if(n === 4){
+    ['q41','q42','q43','q44','q45','q46','q47','q48'].forEach(function(id){ req(id, getRadio(id)); });
+  }
+  if(n === 5){
+    ['q51','q53','q57','q58','q59','q510','q511'].forEach(function(id){ req(id, getRadio(id)); });
+    ['q52','q56'].forEach(function(id){ req(id, null, true); });
+    req('q54', getRadio('q54'));
+    req('q55', getRadio('q55'));
+  }
+  if(n === 6){
+    ['q62','q63'].forEach(function(id){ req(id, getRadio(id)); });
+    req('q64', getRadio('q64'));
+    var matrixOk = ['q61a','q61b','q61c','q61d','q61e'].every(function(s){ return !!getRadio(s); });
+    setErr('q61', !matrixOk);
+    if(!matrixOk) ok = false;
+  }
+  if(n === 7){
+    ['q71','q72','q73','q74','q75'].forEach(function(id){ req(id, getRadio(id)); });
+    req('q76', getRadio('q76'));
+  }
+  if(n === 8){
+    req('q82', getRadio('q82'));
+  }
+  if(!ok){
+    var firstErr = document.querySelector('.err.show');
+    if(firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return ok;
+}
+
+function goNext(n){ if(validateSection(n)) showSection(n + 1); }
+function goPrev(n){ showSection(n - 1); }
+
+function computeFlags(d){
+  var f = [];
+  if((d.q21 === 'Não existe' || d.q21 === 'Desconheço') && d.q23 === 'Sigo rigorosamente') f.push('IC-01');
+  var bogus = ['ResearchMind AI','ScholarBot Pro','AcademiAI Research Suite'];
+  if(bogus.some(function(b){ return (d.q32 || '').indexOf(b) !== -1; })) f.push('BC-01');
+  if(d.q33 && d.q33 !== '5') f.push('AT-01');
+  if(parseInt(d.q43||0) >= 4 && parseInt(d.q44||0) >= 4) f.push('IR-01');
+  var highFreq = ['Frequentemente (semanal ou mais)','Regularmente (algumas vezes/mês)'];
+  if(highFreq.indexOf(d.q51) !== -1 && d.q53 === 'Em nenhum (ou < 3 artigos em 2 anos)') f.push('IR-02');
+  if(parseInt(d.q54||0) >= 4 && (d.q55 === 'Sim — mais de um artigo' || d.q55 === 'Sim — exatamente um artigo')) f.push('IR-03');
+  var ps57high = ['Entre 51% e 70%','Mais de 70%'];
+  if(ps57high.indexOf(d.q57) !== -1 && d.q58 === 'Nenhum (0%)') f.push('PS-01');
+  if(d.q59 && d.q59 !== 'Não mudaria nada') f.push('CF-01');
+  if(parseInt(d.q26||0) >= 4 && parseInt(d.q47||0) >= 4 && parseInt(d.q64||0) >= 4) f.push('DS-SUM');
+  if(parseInt(d.q76||0) <= 2 && (d.q55 === 'Sim — mais de um artigo' || d.q55 === 'Sim — exatamente um artigo' || d.q58 !== 'Nenhum (0%)')) f.push('IR-05');
+  return f;
+}
+
+function collectData(){
+  var d = {};
+  ['q01','q11','q12','q14','q15','q16','q17','q21','q22','q23','q24','q25','q26',
+   'q31','q33','q34','q35','q41','q42','q43','q44','q45','q46','q47','q48',
+   'q51','q53','q54','q55','q57','q58','q59','q510','q511',
+   'q62','q63','q64','q71','q72','q73','q74','q75','q76','q82'].forEach(function(n){
+    d[n] = getRadio(n) || '';
+  });
+  ['q13','q32','q52','q56'].forEach(function(n){ d[n] = getCheckboxes(n).join(' | '); });
+  ['q61a','q61b','q61c','q61d','q61e'].forEach(function(n){ d[n] = getRadio(n) || ''; });
+  d.q81 = document.getElementById('q81').value || '';
+  var flags = computeFlags(d);
+  d.flags = flags.join(' | ');
+  d.n_flags = flags.length;
+  d.timestamp = new Date().toISOString();
+  return d;
+}
+
+async function submitSurvey(){
+  if(!validateSection(8)) return;
+  var btn = document.getElementById('submit-btn');
+  var msg = document.getElementById('submit-msg');
+  msg.className = 'submit-msg';
+  msg.style.display = 'none';
+  var url = SHEETS_URL;
+  if(!url){
+    msg.className = 'submit-msg submit-err';
+    msg.style.display = 'block';
+    msg.textContent = 'URL do Web App não configurada. O pesquisador responsável deve configurar a integração com o Google Sheets antes de coletar respostas.';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  var data = collectData();
+  try {
+    await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    msg.className = 'submit-msg submit-ok';
+    msg.style.display = 'block';
+    msg.textContent = 'Respostas registradas com sucesso. Agradecemos sua participação nesta pesquisa.';
+    btn.style.display = 'none';
+    document.getElementById('prog').style.width = '100%';
+    document.getElementById('prog-label').textContent = 'Concluído';
+  } catch(e) {
+    msg.className = 'submit-msg submit-err';
+    msg.style.display = 'block';
+    msg.textContent = 'Erro ao enviar. Verifique sua conexão e tente novamente.';
+    btn.disabled = false;
+    btn.textContent = 'Enviar respostas';
+  }
+}
+
+function saveUrl(){
+  var url = document.getElementById('sheets-url').value.trim();
+  SHEETS_URL = url;
+  try { localStorage.setItem('shadow_ai_sheets_url', url); } catch(e){}
+  updateUrlStatus();
+  alert('URL salva com sucesso.');
+}
+
+function updateUrlStatus(){
+  var url = document.getElementById('sheets-url').value.trim();
+  var st = document.getElementById('url-status');
+  if(!url){ st.className='status-badge s-warn'; st.textContent='Não configurada'; }
+  else if(!url.startsWith('https://script.google.com')){ st.className='status-badge s-err'; st.textContent='URL inválida'; }
+  else { st.className='status-badge s-ok'; st.textContent='Configurada'; }
+}
+
+function testUrl(){
+  var url = document.getElementById('sheets-url').value.trim();
+  if(!url){ alert('Insira a URL antes de testar.'); return; }
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    if(d.status === 'online') alert('Conexão bem-sucedida. O Web App está online.');
+    else alert('Web App respondeu, mas com status inesperado: ' + JSON.stringify(d));
+  }).catch(function(){ alert('Não foi possível conectar. Verifique se o Web App foi publicado corretamente com acesso público.'); });
+}
+
+function hideConfig(){
+  document.getElementById('config-card').style.display = 'none';
+}
+
+document.getElementById('sheets-url').addEventListener('input', updateUrlStatus);
+updateProgress();
+</script>
+</body>
+</html>
